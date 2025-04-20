@@ -22,7 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.idea/
+.idea/MONGO_URI=mongodb://localhost:27017/your-database-nameMONGO_URI=mongodb://localhost:27017/your-database-name
 
 # Environment files
 .env

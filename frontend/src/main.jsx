@@ -1,17 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Route,
-  Link,
-} from "react-router-dom";
-
-// components imports
-import Login from "./components/Login.jsx";
-import Task from "./components/Task.jsx";
-import Comments from "./components/Comments.jsx";
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import Task from './components/Task';
+import Comments from "./components/Comments";
 import App from "./App";
 import "./index.css";
 
@@ -21,7 +15,11 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/task",
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path: "/tasks",
     element: <Task />,
   },
   {

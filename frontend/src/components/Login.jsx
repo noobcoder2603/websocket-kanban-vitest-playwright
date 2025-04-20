@@ -1,137 +1,134 @@
-import { useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './Auth.css';
 
 const Login = () => {
-  const emailRef = useRef(null);
-  const passwordRef = useRef(null);
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    console.log('Login attempt started');
+
     try {
-      const response = await axios.post("http://localhost:5002/api/login", {
-        email: emailRef.current.value,
-        password: passwordRef.current.value
-      });
-      
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("tasks", JSON.stringify(response.data.tasks));
-      navigate("/tasks");
+      console.log('Sending request to:', `${import.meta.env.VITE_API_URL}/api/auth/login`);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        {
+          email: formData.email,
+          password: formData.password
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }
+      );
+      console.log('Login response:', response.data);
+
+      if (response.data.success) {
+        console.log('Login successful, storing token');
+        // Store both token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Force full page reload to initialize socket cleanly
+        window.location.assign('/tasks');
+        return;
+      } else {
+        setError(response.data.message || 'Login failed. Please try again.');
+      }
     } catch (err) {
-      setError("Invalid credentials");
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.message || 
+                         err.response?.data?.error || 
+                         'Login failed. Please check your credentials and try again.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
-
   return (
-    <div className="login-container" style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5'
-    }}>
-      <div className="login-card" style={{
-        width: '400px',
-        padding: '2rem',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-      }}>
-        <h2 style={{
-          textAlign: 'center',
-          marginBottom: '1.5rem',
-          color: '#333'
-        }}>Welcome back!</h2>
-        
-        <p style={{
-          textAlign: 'center',
-          marginBottom: '2rem',
-          color: '#666'
-        }}>Sign in to access your account</p>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Welcome back!</h2>
+        {error && (
+          <div className="auth-error">
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="auth-retry"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem'
-        }}>
-          <div>
-            <label htmlFor="email" style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              fontWeight: '500',
-              color: '#333'
-            }}>Email</label>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
-              ref={emailRef}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '1rem'
-              }}
+              autoComplete="username"
             />
           </div>
 
-          <div>
-            <label htmlFor="password" style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              fontWeight: '500',
-              color: '#333'
-            }}>Password</label>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
-              ref={passwordRef}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '1rem'
-              }}
+              autoComplete="current-password"
             />
           </div>
 
-          <button type="submit" style={{
-            backgroundColor: '#000',
-            color: 'white',
-            padding: '0.75rem',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '1rem',
-            fontWeight: '500',
-            cursor: 'pointer',
-            marginTop: '1rem'
-          }}>
-            Sign In
+          <button 
+            type="submit" 
+            disabled={loading}
+            className={loading ? 'auth-loading' : ''}
+          >
+            {loading ? (
+              <>
+                <span className="auth-spinner"></span>
+                Logging in...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 
-        <div style={{
-          textAlign: 'center',
-          marginTop: '1.5rem',
-          color: '#666'
-        }}>
+        <div className="auth-footer">
           Don't have an account?{' '}
           <button 
-            onClick={() => navigate('/Signup')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#000',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
+            onClick={() => navigate('/signup')} 
+            className="auth-link"
           >
             Sign up
           </button>
