@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.idea/
+
+# Environment files
+.env
+*.env
+
+
+
